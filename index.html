@@ -14,7 +14,6 @@
       margin: 50px;
     }
   </style>
-  <link rel="stylesheet" href="./static/sprites.css">
 </head>
 
 <body>
@@ -24,8 +23,9 @@
 <script>
 // 生成精灵图JSON网址: https://www.leshylabs.com/apps/sstool/;
 (function() {
-  $.get('./static/sprites', result => {
+  $.get('./static/spritessheet.json', result => {
     console.log(result);
+    console.log(result.ic_voice);
   })
 })()
 
@@ -39,11 +39,15 @@ class AnimationHelp {
     this.dom = dom;
     this.speed = speed;
     this.imageUrl = "http://review.4006688991.com/pixi/asset/image/" + key + ".png";
+    // this.imageUrl = "./static/" + key + ".png";
     let oDiv = document.createElement('div');
     dom.appendChild(oDiv);
     this.oDiv = oDiv;
     this.dataPro = new Promise((resolve) => {
-      $.get("http://review.4006688991.com/pixi/asset/txt/" + key + ".xml", result => {
+      let url = "http://review.4006688991.com/pixi/asset/txt/" + key + ".xml"
+      // let url = './static/' + key + 'json';
+      $.get(url, result => {
+        console.log('result', result);
         this.nodeChildrens = $(result).find("SubTexture");
         this.imageAttribute.height = $(this.nodeChildrens[0]).attr("height");
         this.imageAttribute.width = $(this.nodeChildrens[0]).attr("width");
@@ -116,18 +120,13 @@ class AnimationHelp {
 
   let dom = document.getElementById('wrapper')
   let dom1 = document.getElementById('wrapper1')
-  console.log(typeof AnimationHelp)
-  console.log(AnimationHelp);
 
 // 10*16 = 160毫秒
   let animation = new AnimationHelp(dom, 'f0881fa6d412574fb7b6a3f512ecd69c', 10)
 // 20*16 = 320毫秒
   let animationOther = new AnimationHelp(dom1, 'f0881fa6d412574fb7b6a3f512ecd69c', 20)
 
-  setTimeout(() =>{
-    animation.stop();
-    animationOther.stop();
-  }, 2200)
+
 
 </script>
 
