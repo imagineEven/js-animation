@@ -21,14 +21,8 @@
   <div id="wrapper1" class="nihao"></div>
 </body>
 <script>
+// 以下为js精灵图动画;
 // 生成精灵图JSON网址: https://www.leshylabs.com/apps/sstool/;
-(function() {
-  $.get('./static/spritessheet.json', result => {
-    console.log(result);
-    console.log(result.ic_voice);
-  })
-})()
-
 class AnimationHelp {
   constructor(dom, key, speed) {
     this.imageAttribute = {};
@@ -38,37 +32,39 @@ class AnimationHelp {
     this.baseWidth=100;
     this.dom = dom;
     this.speed = speed;
-    this.imageUrl = "http://review.4006688991.com/pixi/asset/image/" + key + ".png";
-    // this.imageUrl = "./static/" + key + ".png";
+    // this.imageUrl = "http://review.4006688991.com/pixi/asset/image/" + key + ".png";
+    this.imageUrl = "./static/" + key + ".png";
     let oDiv = document.createElement('div');
     dom.appendChild(oDiv);
     this.oDiv = oDiv;
     this.dataPro = new Promise((resolve) => {
-      let url = "http://review.4006688991.com/pixi/asset/txt/" + key + ".xml"
-      // let url = './static/' + key + 'json';
+      // let url = "http://review.4006688991.com/pixi/asset/txt/" + key + ".xml"
+      let url = './static/allAnimation.json';
       $.get(url, result => {
-        console.log('result', result);
-        this.nodeChildrens = $(result).find("SubTexture");
-        this.imageAttribute.height = $(this.nodeChildrens[0]).attr("height");
-        this.imageAttribute.width = $(this.nodeChildrens[0]).attr("width");
+        let keyData = result[key];
+        console.log(keyData)
+        this.imageAttribute.height = keyData[0].height;
+        this.imageAttribute.width = keyData[0].width;
         this.imageAttribute.childrens = [];
-        let arr = [].slice.call(this.nodeChildrens);
-        for (let item of arr) {
+        for (let item of keyData) {
           let value = [];
-          value.push(item.attributes.x.value);
-          value.push(item.attributes.y.value);
+          value.push(item.x);
+          value.push(item.y);
           this.imageAttribute.childrens.push(value);
         }
+        console.log('this.imageAttribute', this.imageAttribute)
         resolve();
       });
     }).then(() => {
       this.start();
     });
-
   }
 
   stop() {
     cancelAnimationFrame(this.animationId);
+    let initX = this.imageAttribute.childrens[0][0];
+    let initY = this.imageAttribute.childrens[0][1];
+    this.img && this.img.css("transform", `translate(-${initX}px, -${initY}px)`);
   }
 
   start() {
@@ -79,8 +75,8 @@ class AnimationHelp {
       let divCss = {
         height: this.imageAttribute.height + 'px',
         width: this.imageAttribute.width + 'px',
-        overflow: 'hidden',
-        zoom: (this.baseWidth / (this.imageAttribute.width > this.imageAttribute.height ? this.imageAttribute.width : this.imageAttribute.height))
+        overflow: 'hidden'
+        // zoom: (this.baseWidth / (this.imageAttribute.width > this.imageAttribute.height ? this.imageAttribute.width : this.imageAttribute.height))
       };
       $(this.oDiv).css(divCss);
       let img = document.createElement('img');
@@ -95,12 +91,10 @@ class AnimationHelp {
     this.lastTime++;
     let that = this;
     that.animationId = requestAnimationFrame(function fn(Time) {
-      // console.log('Time', Time);
       that.rander();
       that.animationId = requestAnimationFrame(fn);
     });
   }
-
 
   // 获取位置,开始位移;
   rander() {
@@ -122,10 +116,14 @@ class AnimationHelp {
   let dom1 = document.getElementById('wrapper1')
 
 // 10*16 = 160毫秒
-  let animation = new AnimationHelp(dom, 'f0881fa6d412574fb7b6a3f512ecd69c', 10)
+  let animation = new AnimationHelp(dom, 'ic_voice', 10)
 // 20*16 = 320毫秒
-  let animationOther = new AnimationHelp(dom1, 'f0881fa6d412574fb7b6a3f512ecd69c', 20)
+  let animationOther = new AnimationHelp(dom1, 'ic_voice', 20)
 
+setTimeout(() => {
+  animation.stop();
+  animationOther.stop();
+}, 2200)
 
 
 </script>

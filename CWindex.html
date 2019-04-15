@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>111</title>
+  <script src="https://code.jquery.com/jquery-1.7.2.min.js"></script>
+  <style>
+    #wrapper {
+      margin: 30px;
+    }
+    .nihao {
+      margin: 50px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="wrapper"></div>
+  <div id="wrapper1" class="nihao"></div>
+</body>
+<script>
+  class animationHelp {
+    constructor() {
+    }
+    repeatAnimation(intervalTime, imgOne) {
+      let animationId
+      let startTime = 0
+      let that = this
+      // 回掉函数只能掉一次
+      // animationId 作用取消循环；
+      animationId = requestAnimationFrame(function fn(timestamp) {
+        if (timestamp > startTime + intervalTime) {
+          startTime = timestamp;
+          that.yaya(imgOne);
+          animationId = requestAnimationFrame(fn);
+        } else {
+          animationId = requestAnimationFrame(fn);
+        }
+      });
+    }
+    yaya(imgOne) {
+      let transformArr = $(imgOne).css("transform").replace(/[^0-9\-,]/g, '')
+        .split(',')
+      if (!transformArr[0]) {
+        let x = this.imageAttribute.childrens[0][0];
+        let y = this.imageAttribute.childrens[0][1];
+        $(imgOne).css("transform", `translate(-${x}px, -${y}px)`);
+      } else {
+        this.imageAttribute.childrens.forEach((element, index) => {
+          // 如果相等 执行下一段的逻辑；
+          if (Number(transformArr[4]) === -element[0] && Number(transformArr[5]) === -element[1]) {
+            if (index === this.imageAttribute.childrens.length - 1) {
+              let x = this.imageAttribute.childrens[0][0];
+              let y = this.imageAttribute.childrens[0][1];
+              $(imgOne).css("transform", `translate(-${x}px, -${y}px)`);
+            } else {
+              let x = this.imageAttribute.childrens[(index + 1)][0];
+              let y = this.imageAttribute.childrens[(index + 1)][1];
+              $(imgOne).css("transform", `translate(-${x}px, -${y}px)`);
+            }
+          }
+        });
+      }
+    }
+    playAnimation(dom, key, intervalTime) {
+      this.imageAttribute = {};
+      this.nodeChildrens = '';
+      let that = this;
+      this.imageUrl = "http://review.4006688991.com/pixi/asset/image/" + key + ".png";
+      new Promise((resolve, reject) => {
+        $.get("http://review.4006688991.com/pixi/asset/txt/" + key + ".xml", result => {
+          this.nodeChildrens = $(result).find("SubTexture")
+          this.imageAttribute.height = $(this.nodeChildrens[0]).attr("height")
+          this.imageAttribute.width = $(this.nodeChildrens[0]).attr("width")
+          this.imageAttribute.childrens = []
+          let arr = [].slice.call(this.nodeChildrens)
+          for (let item of arr) {
+            let value = [];
+            value.push(item.attributes.x.value)
+            value.push(item.attributes.y.value)
+            this.imageAttribute.childrens.push(value)
+          }
+          resolve();
+        });
+      }).then(() => {
+        console.log(this.imageAttribute);
+        let oDiv = document.createElement('div');
+        dom.appendChild(oDiv);
+        let divCss = {
+          height: this.imageAttribute.height + 'px',
+          width: this.imageAttribute.width + 'px',
+          overflow: 'hidden',
+        };
+        $(oDiv).css(divCss);
+        this.img = document.createElement('img');
+        $(this.img).attr("src", this.imageUrl);
+        oDiv.appendChild(this.img);
+        this.repeatAnimation(intervalTime, this.img);
+      })
+    }
+  }
+  // let frameObj = new animationHelp()
+  // let dom = document.getElementById('wrapper')
+  // let dom1 = document.getElementById('wrapper1')
+  // frameObj.playAnimation(dom, 'f0881fa6d412574fb7b6a3f512ecd69c', 1000);
+  // frameObj.playAnimation(dom1, 'f0881fa6d412574fb7b6a3f512ecd69c', 200);
+class AnimationHelp {
+  constructor(dom, key, speed) {
+    this.imageAttribute = {};
+    this.nodeChildrens = '';
+    this.lastTime = 0;
+    this.nowFramesIndex = 0;
+    this.baseWidth=100;
+    this.dom = dom;
+    this.speed = speed;
+    this.imageUrl = "http://review.4006688991.com/pixi/asset/image/" + key + ".png";
+    let oDiv = document.createElement('div');
+    dom.appendChild(oDiv);
+    this.oDiv = oDiv;
+    this.dataPro = new Promise((resolve) => {
+      $.get("http://review.4006688991.com/pixi/asset/txt/" + key + ".xml", result => {
+        this.nodeChildrens = $(result).find("SubTexture");
+        this.imageAttribute.height = $(this.nodeChildrens[0]).attr("height");
+        this.imageAttribute.width = $(this.nodeChildrens[0]).attr("width");
+        this.imageAttribute.childrens = [];
+        let arr = [].slice.call(this.nodeChildrens);
+        for (let item of arr) {
+          let value = [];
+          value.push(item.attributes.x.value);
+          value.push(item.attributes.y.value);
+          this.imageAttribute.childrens.push(value);
+        }
+        resolve();
+      });
+    }).then(() => {
+      this.start();
+    });
+  }
+  stop() {
+    cancelAnimationFrame(this.animationId);
+  }
+  start() {
+    this.stop();
+    this.dataPro.then(() => {
+      $(this.oDiv).html('');
+      let divCss = {
+        height: this.imageAttribute.height + 'px',
+        width: this.imageAttribute.width + 'px',
+        overflow: 'hidden',
+        zoom: (this.baseWidth / (this.imageAttribute.width > this.imageAttribute.height ? this.imageAttribute.width : this.imageAttribute.height))
+      };
+      $(this.oDiv).css(divCss);
+      this.img = document.createElement('img');
+      this.img = $(this.img);
+      $(this.img).attr("src", this.imageUrl);
+      $(this.oDiv).append(this.img);
+      this.repeatAnimation();
+    });
+  }
+  repeatAnimation() {
+    this.lastTime++;
+    let that = this;
+    that.animationId = requestAnimationFrame(function fn() {
+      that.rander();
+      that.animationId = requestAnimationFrame(fn);
+    });
+  }
+  rander() {
+    if (this.lastTime % this.speed === 0) {
+      if (this.imageAttribute.childrens.length <= this.nowFramesIndex) {
+        this.nowFramesIndex = 0;
+      }
+      let x = this.imageAttribute.childrens[this.nowFramesIndex][0];
+      let y = this.imageAttribute.childrens[this.nowFramesIndex][1];
+      this.img.css("transform", `translate(-${x}px, -${y}px)`);
+      this.nowFramesIndex++;
+    }
+    this.lastTime++;
+  }
+}
+  let dom = document.getElementById('wrapper')
+  let dom1 = document.getElementById('wrapper1')
+  console.log(typeof AnimationHelp)
+  console.log(AnimationHelp);
+  new AnimationHelp(dom, 'f0881fa6d412574fb7b6a3f512ecd69c', 100)
+  new AnimationHelp(dom1, 'f0881fa6d412574fb7b6a3f512ecd69c', 200)
+</script>
+
+</html>
